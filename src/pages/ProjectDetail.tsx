@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
@@ -68,7 +67,7 @@ const mockComments = [
     content: "This is exactly what we need! I love the gamification aspect. Have you considered integrating with fitness trackers to automatically detect transportation methods?",
     upvotes: 12,
     downvotes: 1,
-    userVote: null,
+    userVote: null as "up" | "down" | null,
     createdAt: "2024-05-23T12:00:00Z",
     replies: [
       {
@@ -81,7 +80,7 @@ const mockComments = [
         content: "Great suggestion! We're actually exploring partnerships with Fitbit and Apple Health. The challenge is accurately detecting bike vs. car vs. walking without draining battery.",
         upvotes: 8,
         downvotes: 0,
-        userVote: null,
+        userVote: null as "up" | "down" | null,
         createdAt: "2024-05-23T12:15:00Z",
       }
     ]
@@ -96,7 +95,7 @@ const mockComments = [
     content: "The concept is solid, but I'm concerned about data privacy. How are you handling sensitive location and activity data? Users will be sharing very personal information about their daily routines.",
     upvotes: 18,
     downvotes: 2,
-    userVote: "up",
+    userVote: "up" as "up" | "down" | null,
     createdAt: "2024-05-23T14:30:00Z",
   },
   {
@@ -109,7 +108,7 @@ const mockComments = [
     content: "Love the environmental focus! One suggestion: partner with local businesses to offer rewards for eco-friendly choices. Like discounts for biking to a coffee shop instead of driving.",
     upvotes: 15,
     downvotes: 0,
-    userVote: null,
+    userVote: null as "up" | "down" | null,
     createdAt: "2024-05-23T16:45:00Z",
   },
 ];
@@ -144,7 +143,7 @@ export default function ProjectDetail() {
         content: newComment,
         upvotes: 0,
         downvotes: 0,
-        userVote: null,
+        userVote: null as "up" | "down" | null,
         createdAt: new Date().toISOString(),
       };
       setComments([comment, ...comments]);
