@@ -1,10 +1,11 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -12,11 +13,27 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [userType, setUserType] = useState<"builder" | "feedback_provider">("builder");
+  const [loading, setLoading] = useState(false);
+  
+  const { signIn, signUp } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement authentication logic with Supabase
-    console.log("Form submitted:", { email, password, name, userType, isLogin });
+    setLoading(true);
+    
+    try {
+      if (isLogin) {
+        await signIn(email, password);
+        navigate('/discover');
+      } else {
+        await signUp(email, password, name, userType);
+      }
+    } catch (error) {
+      // Error handling is done in the auth hook
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -113,8 +130,8 @@ export default function Login() {
                 />
               </div>
               
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-                {isLogin ? "Sign In" : "Create Account"}
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={loading}>
+                {loading ? "Loading..." : (isLogin ? "Sign In" : "Create Account")}
               </Button>
             </form>
             

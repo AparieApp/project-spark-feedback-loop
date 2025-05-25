@@ -1,74 +1,11 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { ProjectCard } from "@/components/project/ProjectCard";
 import { ProjectFilters } from "@/components/project/ProjectFilters";
 import { Users } from "lucide-react";
-
-// Mock data for demonstration
-const mockProjects = [
-  {
-    id: "1",
-    title: "EcoTrack - Carbon Footprint Calculator",
-    description: "A mobile app that helps users track and reduce their daily carbon footprint through gamification and community challenges.",
-    builder: {
-      name: "Sarah Chen",
-      avatar: undefined,
-    },
-    category: "social",
-    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&h=400&fit=crop",
-    commentCount: 23,
-    upvotes: 47,
-    isUpvoted: false,
-    createdAt: "2024-05-23",
-  },
-  {
-    id: "2",
-    title: "DevMentor - Code Review Platform",
-    description: "Connect junior developers with experienced mentors for real-time code reviews and learning opportunities.",
-    builder: {
-      name: "Alex Rodriguez",
-      avatar: undefined,
-    },
-    category: "tech",
-    image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&h=400&fit=crop",
-    commentCount: 31,
-    upvotes: 62,
-    isUpvoted: true,
-    createdAt: "2024-05-22",
-  },
-  {
-    id: "3",
-    title: "Mindful Moments - Meditation Assistant",
-    description: "AI-powered meditation app that adapts to your stress levels and schedule to provide personalized mindfulness sessions.",
-    builder: {
-      name: "Maya Patel",
-      avatar: undefined,
-    },
-    category: "tech",
-    image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&h=400&fit=crop",
-    commentCount: 18,
-    upvotes: 35,
-    isUpvoted: false,
-    createdAt: "2024-05-21",
-  },
-  {
-    id: "4",
-    title: "LocalCraft - Artisan Marketplace",
-    description: "Digital platform connecting local artisans with customers, featuring AR try-on and sustainability tracking.",
-    builder: {
-      name: "James Wilson",
-      avatar: undefined,
-    },
-    category: "business",
-    image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&h=400&fit=crop",
-    commentCount: 12,
-    upvotes: 28,
-    isUpvoted: false,
-    createdAt: "2024-05-20",
-  },
-];
+import { useProjects } from "@/hooks/useProjects";
 
 export default function Discover() {
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -76,15 +13,37 @@ export default function Discover() {
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
 
-  const filteredProjects = mockProjects.filter(project => {
-    const matchesCategory = selectedCategory === "all" || project.category === selectedCategory;
-    const matchesSearch = !searchQuery || 
-      project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.builder.name.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return matchesCategory && matchesSearch;
+  const { data: projects = [], isLoading, error } = useProjects(selectedCategory, searchQuery);
+
+  // Sort projects based on sortBy
+  const sortedProjects = [...projects].sort((a, b) => {
+    switch (sortBy) {
+      case 'newest':
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      case 'oldest':
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      case 'most_upvoted':
+        return b.upvotes - a.upvotes;
+      case 'most_commented':
+        return b.comment_count - a.comment_count;
+      default:
+        return 0;
+    }
   });
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-red-600 mb-4">Error loading projects</h2>
+            <p className="text-gray-600">Please try again later.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -124,16 +83,45 @@ export default function Discover() {
             <h2 className="text-2xl font-bold text-gray-900">
               {selectedCategory === "all" ? "All Projects" : `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Projects`}
             </h2>
-            <span className="text-gray-600">{filteredProjects.length} projects found</span>
+            <span className="text-gray-600">
+              {isLoading ? "Loading..." : `${sortedProjects.length} projects found`}
+            </span>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProjects.map((project) => (
-              <ProjectCard key={project.id} {...project} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                  <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sortedProjects.map((project) => (
+                <ProjectCard 
+                  key={project.id} 
+                  id={project.id}
+                  title={project.title}
+                  description={project.description}
+                  builder={{
+                    name: project.profiles.full_name || 'Anonymous',
+                    avatar: project.profiles.avatar_url,
+                  }}
+                  category={project.category}
+                  image={project.image_url}
+                  commentCount={project.comment_count}
+                  upvotes={project.upvotes}
+                  isUpvoted={false} // We'll implement this later with vote checking
+                  createdAt={project.created_at}
+                />
+              ))}
+            </div>
+          )}
 
-          {filteredProjects.length === 0 && (
+          {!isLoading && sortedProjects.length === 0 && (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4">
                 <Users className="h-16 w-16 mx-auto" />
@@ -142,7 +130,7 @@ export default function Discover() {
               <p className="text-gray-600">
                 {searchQuery 
                   ? `No projects match your search for "${searchQuery}". Try adjusting your search terms or filters.`
-                  : "Try adjusting your filters or check back later for new projects."
+                  : "No projects have been shared yet. Be the first to share your project!"
                 }
               </p>
             </div>

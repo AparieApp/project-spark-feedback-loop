@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronUp, User, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { useProjectVote } from "@/hooks/useProjects";
 
 interface ProjectCardProps {
   id: string;
@@ -36,17 +38,38 @@ export function ProjectCard({
 }: ProjectCardProps) {
   const [currentUpvotes, setCurrentUpvotes] = useState(upvotes);
   const [hasUpvoted, setHasUpvoted] = useState(isUpvoted);
+  const { user } = useAuth();
+  const projectVote = useProjectVote();
 
-  const handleUpvote = (e: React.MouseEvent) => {
+  const handleUpvote = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (hasUpvoted) {
-      setCurrentUpvotes(prev => prev - 1);
-    } else {
-      setCurrentUpvotes(prev => prev + 1);
+    if (!user) {
+      // Redirect to login if not authenticated
+      window.location.href = '/login';
+      return;
     }
-    setHasUpvoted(!hasUpvoted);
+    
+    try {
+      // Optimistic update
+      if (hasUpvoted) {
+        setCurrentUpvotes(prev => prev - 1);
+      } else {
+        setCurrentUpvotes(prev => prev + 1);
+      }
+      setHasUpvoted(!hasUpvoted);
+
+      await projectVote.mutateAsync({ projectId: id, isUpvoted: hasUpvoted });
+    } catch (error) {
+      // Revert optimistic update on error
+      if (hasUpvoted) {
+        setCurrentUpvotes(prev => prev + 1);
+      } else {
+        setCurrentUpvotes(prev => prev - 1);
+      }
+      setHasUpvoted(hasUpvoted);
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -85,6 +108,7 @@ export function ProjectCard({
               variant="ghost"
               size="sm"
               onClick={handleUpvote}
+              disabled={projectVote.isPending}
               className={cn(
                 "flex flex-col items-center p-2 h-auto min-w-[60px] transition-colors",
                 hasUpvoted

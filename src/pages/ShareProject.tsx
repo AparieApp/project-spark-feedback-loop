@@ -1,11 +1,14 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/hooks/useAuth";
+import { useCreateProject } from "@/hooks/useProjects";
 import { Link } from "react-router-dom";
 
 const categories = [
@@ -22,12 +25,68 @@ export default function ShareProject() {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  
+  const { user } = useAuth();
+  const createProject = useCreateProject();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement project creation logic with Supabase
-    console.log("Project submitted:", { title, description, category, imageUrl });
+    
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      await createProject.mutateAsync({
+        title,
+        description,
+        category,
+        image_url: imageUrl || undefined,
+      });
+      
+      // Reset form
+      setTitle("");
+      setDescription("");
+      setCategory("");
+      setImageUrl("");
+      
+      // Navigate to discover page
+      navigate('/discover');
+    } catch (error) {
+      // Error handling is done in the mutation
+    }
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="max-w-2xl mx-auto text-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Share Your Project</h1>
+            <p className="text-xl text-gray-600 mb-8">
+              You need to be logged in to share a project
+            </p>
+            <div className="space-x-4">
+              <Link to="/login">
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  Sign In
+                </Button>
+              </Link>
+              <Link to="/discover">
+                <Button variant="outline">
+                  Browse Projects Instead
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -119,8 +178,12 @@ export default function ShareProject() {
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700 flex-1">
-                    Share Project
+                  <Button 
+                    type="submit" 
+                    className="bg-blue-600 hover:bg-blue-700 flex-1"
+                    disabled={createProject.isPending}
+                  >
+                    {createProject.isPending ? "Sharing..." : "Share Project"}
                   </Button>
                   <Link to="/discover" className="flex-1">
                     <Button type="button" variant="outline" className="w-full">
@@ -129,15 +192,6 @@ export default function ShareProject() {
                   </Link>
                 </div>
               </form>
-              
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> You need to be logged in to share a project. 
-                  <Link to="/login" className="text-blue-600 hover:text-blue-700 underline ml-1">
-                    Sign in here
-                  </Link>
-                </p>
-              </div>
             </CardContent>
           </Card>
         </div>
