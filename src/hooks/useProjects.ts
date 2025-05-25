@@ -60,9 +60,12 @@ export function useCreateProject() {
       category: string;
       image_url?: string;
     }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data, error } = await supabase
         .from('projects')
-        .insert([project])
+        .insert([{ ...project, user_id: user.id }])
         .select()
         .single();
 
@@ -92,19 +95,22 @@ export function useProjectVote() {
 
   return useMutation({
     mutationFn: async ({ projectId, isUpvoted }: { projectId: string; isUpvoted: boolean }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       if (isUpvoted) {
         // Remove vote
         const { error } = await supabase
           .from('project_votes')
           .delete()
           .eq('project_id', projectId)
-          .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+          .eq('user_id', user.id);
         if (error) throw error;
       } else {
         // Add vote
         const { error } = await supabase
           .from('project_votes')
-          .insert([{ project_id: projectId }]);
+          .insert([{ project_id: projectId, user_id: user.id }]);
         if (error) throw error;
       }
     },
