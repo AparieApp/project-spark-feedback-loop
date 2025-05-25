@@ -95,31 +95,55 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string | null
+          facebook_url: string | null
           full_name: string | null
           id: string
+          interests: string[] | null
+          linkedin_url: string | null
+          location: string | null
+          tiktok_url: string | null
+          twitter_url: string | null
           updated_at: string | null
           user_type: string | null
           username: string | null
+          website_url: string | null
+          youtube_url: string | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          facebook_url?: string | null
           full_name?: string | null
           id: string
+          interests?: string[] | null
+          linkedin_url?: string | null
+          location?: string | null
+          tiktok_url?: string | null
+          twitter_url?: string | null
           updated_at?: string | null
           user_type?: string | null
           username?: string | null
+          website_url?: string | null
+          youtube_url?: string | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          facebook_url?: string | null
           full_name?: string | null
           id?: string
+          interests?: string[] | null
+          linkedin_url?: string | null
+          location?: string | null
+          tiktok_url?: string | null
+          twitter_url?: string | null
           updated_at?: string | null
           user_type?: string | null
           username?: string | null
+          website_url?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }
@@ -199,6 +223,60 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "projects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_project_links: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_internal: boolean | null
+          project_id: string | null
+          title: string
+          updated_at: string | null
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_internal?: boolean | null
+          project_id?: string | null
+          title: string
+          updated_at?: string | null
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_internal?: boolean | null
+          project_id?: string | null
+          title?: string
+          updated_at?: string | null
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_project_links_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_project_links_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

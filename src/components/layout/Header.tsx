@@ -3,14 +3,17 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, User, Menu, X } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Search, User, Menu, X, LogOut, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -60,20 +63,55 @@ export function Header() {
             >
               Discover
             </Link>
-            <Link
-              to="/login"
-              className="text-sm font-medium transition-colors hover:text-blue-600 text-gray-700"
-            >
-              <Button variant="outline" size="sm">
-                <User className="h-4 w-4 mr-2" />
-                Login
-              </Button>
-            </Link>
-            <Link to="/share-project">
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                Share Project
-              </Button>
-            </Link>
+            
+            {user ? (
+              <>
+                <Link to="/share-project">
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                    Share Project
+                  </Button>
+                </Link>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex items-center space-x-2">
+                      <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+                        <User className="h-3 w-3" />
+                      </div>
+                      <span className="hidden lg:inline">
+                        {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
+                      </span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="w-full">
+                        <User className="mr-2 h-4 w-4" />
+                        My Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="w-full">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={signOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <Link to="/login">
+                <Button variant="outline" size="sm">
+                  <User className="h-4 w-4 mr-2" />
+                  Login
+                </Button>
+              </Link>
+            )}
           </nav>
 
           {/* Mobile Menu Button */}
