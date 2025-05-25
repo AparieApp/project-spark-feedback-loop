@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Discover from "./pages/Discover";
 import Login from "./pages/Login";
 import ShareProject from "./pages/ShareProject";
+import ProjectDetail from "./pages/ProjectDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/discover" element={<Discover />} />
             <Route path="/login" element={<Login />} />
             <Route path="/share-project" element={<ShareProject />} />
+            <Route path="/project/:id" element={<ProjectDetail />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
